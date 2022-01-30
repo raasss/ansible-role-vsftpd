@@ -1,0 +1,53 @@
+---
+- name: install packages
+  apt:
+    name: "{{ vsftpd_packages }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Create certs directory
+  file:
+    path: /etc/vsftpd/certs
+    state: directory
+    mode: 0750
+    owner: root
+    group: root
+  when: vsftpd_rsa_cert_file is defined and vsftpd_rsa_private_key_file is defined
+
+- name: Copy certificate
+  copy:
+    src: "{{ vsftpd_rsa_cert_file }}"
+    dest: /etc/vsftpd/certs/cert.pem
+    mode: 0644
+    owner: root
+    group: root
+  when: vsftpd_rsa_cert_file is defined and vsftpd_rsa_private_key_file is defined
+  notify:
+    - restart vsftpd
+
+- name: Copy certificate key
+  copy:
+    src: "{{ vsftpd_rsa_private_key_file }}"
+    dest: /etc/vsftpd/certs/cert.key
+    mode: 0640
+    owner: root
+    group: root
+  when: vsftpd_rsa_cert_file is defined and vsftpd_rsa_private_key_file is defined
+  notify:
+    - restart vsftpd
+
+- name: Configure vsftpd.conf
+  template:
+    src: vsftpd.conf.j2
+    dest: "{{ vsftpd_conf_file }}"
+    owner: root
+    group: root
+    mode: 000640
+  notify: restart vsftpd
+
+- name: Enable and start service
+  service:
+    name: vsftpd
+    state: started
+    enabled: yes

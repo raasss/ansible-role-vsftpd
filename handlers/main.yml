@@ -1,0 +1,13 @@
+---
+- name: restart vsftpd
+  service:
+    name: "{{ vsftpd_service_name }}"
+    state: restarted
+  throttle: 1
+
+- name: reload vsftpd
+  service:
+    name: "{{ vsftpd_service_name }}"
+    state: reloaded
+  throttle: 1
+  
